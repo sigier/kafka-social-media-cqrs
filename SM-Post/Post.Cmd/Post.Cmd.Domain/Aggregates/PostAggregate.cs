@@ -1,0 +1,174 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using CQRS.Core.Domain;
+using CQRS.Core.Messages;
+using Post.Common.Events;
+
+namespace Post.Cmd.Domain.Aggregates
+{
+    public class PostAggregate: AggregateRoot
+    {
+        bool _active;
+        string _author;
+
+        private readonly Dictionary<Guid, Tuple<string, string>> _comments = new();
+
+        public bool Active
+        {
+            get { return _active; } 
+            set { _active = value; }
+        }
+
+        public PostAggregate()
+        {
+
+        }
+
+        public PostAggregate(Guid id, string author, string message)
+        {
+
+            RaiseEvent(new PostCreatedEvent { Id = id, Author = author, Message = message, DatePosted = DateTime.Now});
+
+        }
+
+        public void Apply(PostCreatedEvent @event)
+        {
+            _id = @event.Id;
+            _author = @event.Author;
+            _active = true;
+        }
+
+        public void EditMessage(string message)
+        {
+            if (!_active)
+            {
+                throw new InvalidOperationException("Inactive post is not editable!");
+            }
+
+            if(string.IsNullOrEmpty(message))
+            {
+                throw new InvalidOperationException($"The value of {nameof(message)} can not be bull or empty!");
+            }
+
+            RaiseEvent(new MessageUpdatedEvent { Id = _id, Message = message });
+        }
+
+        public void Apply(MessageUpdatedEvent @event)
+        {
+            _id = @event.Id;
+        }
+
+        public void LikePost(string message)
+        {
+            if (!_active)
+            {
+                throw new InvalidOperationException("Inactive post is not likeable!");
+            }
+
+            RaiseEvent(new PostLikedEvent { Id = _id });
+        }
+
+        public void Apply(PostLikedEvent @event)
+        {
+            _id = @event.Id;
+        }
+
+        public void AddComment(string comment, string username)
+        {
+            if (!_active)
+            {
+                throw new InvalidOperationException("Inactive post can not be commented!");
+            }
+
+
+            if (string.IsNullOrEmpty(comment))
+            {
+                throw new InvalidOperationException($"The value of {nameof(comment)} can not be bull or empty!");
+            }
+
+            RaiseEvent(new CommentAddedEvent { Id = _id, CommentId = Guid.NewGuid(), Comment = comment, Username = username, CommentDate = DateTime.Now});
+
+        }
+
+        public void Apply(CommentAddedEvent @event)
+        {
+            _id = @event.Id;
+            _comments.Add(@event.CommentId, new Tuple<string, string>(@event.Comment, @event.Username));
+        }
+
+        public void EditComment(Guid commentId, string comment, string username)
+        {
+            if (!_active)
+            {
+                throw new InvalidOperationException("Inactive post comment can not be edited!");
+            }
+
+            if (!_comments[commentId].Item2.Equals(username, StringComparison.CurrentCultureIgnoreCase))
+            {
+                throw new InvalidOperationException("You can not edit others' comment!");
+            }
+
+            RaiseEvent(new CommentUpdatedEvent { 
+                Id = _id,
+                CommentId = Guid.NewGuid(),
+                Comment = comment,
+                Username = username, EditDate = DateTime.Now });
+
+        }
+
+        public void Apply(CommentUpdatedEvent @event)
+        {
+            _id = @event.Id;
+            _comments[@event.CommentId] = new Tuple<string, string>(@event.Comment, @event.Username);
+        }
+
+        public void RemoveComment(Guid commentId, string username)
+        {
+            if (!_active)
+            {
+                throw new InvalidOperationException("Inactive post comment can not be removed!");
+            }
+
+            if (!_comments[commentId].Item2.Equals(username, StringComparison.CurrentCultureIgnoreCase))
+            {
+                throw new InvalidOperationException("You can not delete others' comment!");
+            }
+
+            RaiseEvent(new CommentRemovedEvent { Id = _id, CommentId = commentId });
+
+        }
+
+        public void Apply(CommentRemovedEvent @event)
+        {
+            _id = @event.Id;
+            _comments.Remove(@event.CommentId);
+
+        }
+
+        public void DeletePost(string username)
+        {
+            if (!_active)
+            {
+                throw new InvalidOperationException("Inactive post can not be removed!");
+            }
+
+            if (!_author.Equals(username, StringComparison.CurrentCultureIgnoreCase))
+            {
+                throw new InvalidOperationException("You can not delete others' post!");
+            }
+
+            RaiseEvent(new PostRemovedEvent { Id = _id });
+        }
+
+        public void Apply(PostRemovedEvent @event)
+        {
+            _id = @event.Id;
+            _active = false;
+
+        }
+    }
+}
