@@ -43,7 +43,7 @@ public abstract class AggregateRoot
         }
     }
 
-    private void RaiseEvent(BaseEvent @event)
+    public void RaiseEvent(BaseEvent @event)
     {
         ApplyChanges(@event, true);
     }
