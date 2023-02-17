@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CQRS.Core.Domain;
-using CQRS.Core.Messages;
+﻿using CQRS.Core.Domain;
 using Post.Common.Events;
 
 namespace Post.Cmd.Domain.Aggregates
@@ -46,15 +39,19 @@ namespace Post.Cmd.Domain.Aggregates
         {
             if (!_active)
             {
-                throw new InvalidOperationException("Inactive post is not editable!");
+                throw new InvalidOperationException("You cannot edit the message of an inactive post!");
             }
 
-            if(string.IsNullOrEmpty(message))
+            if (string.IsNullOrWhiteSpace(message))
             {
-                throw new InvalidOperationException($"The value of {nameof(message)} can not be bull or empty!");
+                throw new InvalidOperationException($"The value of {nameof(message)} cannot be null or empty. Please provide a valid {nameof(message)}!");
             }
 
-            RaiseEvent(new MessageUpdatedEvent { Id = _id, Message = message });
+            RaiseEvent(new MessageUpdatedEvent
+            {
+                Id = _id,
+                Message = message
+            });
         }
 
         public void Apply(MessageUpdatedEvent @event)
@@ -62,14 +59,17 @@ namespace Post.Cmd.Domain.Aggregates
             _id = @event.Id;
         }
 
-        public void LikePost(string message)
+        public void LikePost()
         {
             if (!_active)
             {
-                throw new InvalidOperationException("Inactive post is not likeable!");
+                throw new InvalidOperationException("You cannot like an inactive post!");
             }
 
-            RaiseEvent(new PostLikedEvent { Id = _id });
+            RaiseEvent(new PostLikedEvent
+            {
+                Id = _id
+            });
         }
 
         public void Apply(PostLikedEvent @event)
@@ -100,24 +100,27 @@ namespace Post.Cmd.Domain.Aggregates
             _comments.Add(@event.CommentId, new Tuple<string, string>(@event.Comment, @event.Username));
         }
 
+
         public void EditComment(Guid commentId, string comment, string username)
         {
             if (!_active)
             {
-                throw new InvalidOperationException("Inactive post comment can not be edited!");
+                throw new InvalidOperationException("You cannot edit a comment of an inactive post!");
             }
 
             if (!_comments[commentId].Item2.Equals(username, StringComparison.CurrentCultureIgnoreCase))
             {
-                throw new InvalidOperationException("You can not edit others' comment!");
+                throw new InvalidOperationException("You are not allowed to edit a comment that was made by another user!");
             }
 
-            RaiseEvent(new CommentUpdatedEvent { 
+            RaiseEvent(new CommentUpdatedEvent
+            {
                 Id = _id,
-                CommentId = Guid.NewGuid(),
+                CommentId = commentId,
                 Comment = comment,
-                Username = username, EditDate = DateTime.Now });
-
+                Username = username,
+                EditDate = DateTime.Now
+            });
         }
 
         public void Apply(CommentUpdatedEvent @event)
