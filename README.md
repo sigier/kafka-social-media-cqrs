@@ -1,1 +1,1 @@
-# Media service backend-service
+# Social media service
