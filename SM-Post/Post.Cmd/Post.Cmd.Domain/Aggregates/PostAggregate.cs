@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CQRS.Core.Domain;
-using CQRS.Core.Messages;
+﻿using CQRS.Core.Domain;
 using Post.Common.Events;
 
 namespace Post.Cmd.Domain.Aggregates

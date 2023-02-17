@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CQRS.Core.Handlers;
+﻿using CQRS.Core.Handlers;
 using Post.Cmd.Domain.Aggregates;
 
 namespace Post.Cmd.Api.Commands

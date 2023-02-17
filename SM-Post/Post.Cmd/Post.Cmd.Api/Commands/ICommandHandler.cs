@@ -1,6 +1,4 @@
 ﻿
-using System.Threading.Tasks;
-
 namespace Post.Cmd.Api.Commands
 {
     public interface ICommandHandler
