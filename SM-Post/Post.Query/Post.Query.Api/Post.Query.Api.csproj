@@ -20,5 +20,6 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
+    <Folder Include="Queries\" />
   </ItemGroup>
 </Project>
