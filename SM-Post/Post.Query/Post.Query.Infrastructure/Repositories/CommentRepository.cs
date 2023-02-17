@@ -6,10 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Post.Query.Domain.Repository;
 
 namespace Post.Query.Infrastructure.Repositories
 {
-    public class CommentRepository
+    public class CommentRepository : ICommentRepository
     {
 
         private readonly DatabaseContextFactory _contextFactory;
